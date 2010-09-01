@@ -1,0 +1,8 @@
+use scons to run single unit tests
+batching tests into single runs through rhino (better performance)
+generate HTTP batch pages for complete, in-browser tests
+handle test runner failures (ie no output or no "PASSED: nn  FAILIED: mm")
+hooks for other JS unit test libraries
+complete cleanup, 'scons -c' should remove all of the generated files
+jsdoc generation
+dependency analyzer for proper inclusion and ordering
