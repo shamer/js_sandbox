@@ -1,0 +1,20 @@
+This is a sandbox for javascript:
+ * demonstrating build files
+ * documentation
+ * project structuring
+ * unit testing
+ * static js analysis
+ * compilation
+
+It's modeled after the Dr. Seuss story "The Sneetches".
+
+To get started run the bootstrap.sh script. It'll pull down and build the
+dependencies for the various tools used:
+ * qunit
+ * envjs
+ * closure-linter
+
+The following scons commands exist:
+scons jstest
+scons jslint
+scons build/sneetches.min.js
