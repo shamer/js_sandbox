@@ -16,5 +16,5 @@ function FixItUpContraption() {}
  * @param {Sneetch} sneetch Sneetch for processing.
  */
 FixItUpContraption.prototype.processSneetch = function(sneetch) {
-  sneetch.setStarbelly(!sneetch.hasStarbelly);
+  sneetch.setStarbelly(!sneetch.hasStarbelly());
 };
