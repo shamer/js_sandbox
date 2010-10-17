@@ -1,5 +1,6 @@
-import subprocess
 import os
+import re
+import subprocess
 
 #FIXME assumes single target
 #TODO make warn level an environment variable
@@ -13,8 +14,6 @@ def build_javascript(target, source, env):
     args.extend(['--js_output_file', str(target[0])])
     args.extend(['--warning_level', 'VERBOSE'])
     args.extend(['--create_source_map', str(target[0]) + '.map'])
-
-    print ' '.join(args)
 
     return subprocess.call(args)
 
@@ -30,7 +29,39 @@ def build_jslint(target, source, env):
     return subprocess.call(args)
 
 def build_jstest(target, source, env):
-    return None
+    totalpass = 0
+    totalfail = 0
+    passfailre = re.compile(r'PASSED:\s+(\d+)\s+FAILED:\s+(\d+)')
+
+    args = ['java']
+    args.extend(['-cp', 'tools/envjs/rhino/js.jar'])
+    args.extend(['org.mozilla.javascript.tools.shell.Main'])
+    args.extend(['-opt', '-1'])
+    args.extend(['-e', None])
+    testtemp = '''load('tools/envjs/dist/env.rhino.js'); \
+load('tools/envjs/plugins/env.qunit.js'); \
+load('tools/envjs_test_hooks.js'); \
+window.location = '%(htmlpath)s';'''
+
+    for htmltest in source:
+        args[-1] = testtemp % {'htmlpath': str(htmltest)}
+        proc = subprocess.Popen(args, stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT)
+        (stdout, _) = proc.communicate()
+        print str(htmltest), "---\n", stdout
+        lines = stdout.splitlines()
+        if len(lines) > 0:
+            m = passfailre.match(lines[-1])
+            if m:
+                totalpass += int(m.group(1))
+                totalfail += int(m.group(2))
+        # TODO deal with test runner failures
+
+    print "PASS:   %3d" % (totalpass, )
+    print "FAIL:   %3d" % (totalfail, )
+    print "TOTAL:  %3d" % (totalpass + totalfail, )
+
+    return totalfail
 
 def build_jsdocs(target, source, env):
     return None
@@ -58,12 +89,23 @@ def filter_js(arg, top, names):
     arg.extend([File(os.path.join(top, name))
             for name in names if name.endswith('.js')])
 
+
+def filter_test_html(arg, top, names):
+    # filter out non 't' and 'test' directories
+    if top.endswith('t') or top.endswith('test'):
+        # include .html files
+        arg.extend([File(os.path.join(top, name))
+                for name in names if name.endswith('.html')])
     
 
 js_files = []
 os.path.walk('src', filter_js, js_files)
  
+html_test_files = []
+os.path.walk('src', filter_test_html, html_test_files)
+ 
 env.JS('build/sneetches.min.js', js_files)
 
 env.jslint('jslint', js_files)
+env.jstest('jstest', html_test_files)
 
